@@ -1,0 +1,47 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <name>Palava JPA AspectJ</name>
+    <version>2.0-SNAPSHOT</version>
+  <parent>
+    <artifactId>palava-parent</artifactId>
+    <groupId>de.cosmocode.palava</groupId>
+    <version>2.0.5</version>
+  </parent>
+  <modelVersion>4.0.0</modelVersion>
+  <groupId>de.cosmocode.palava</groupId>
+  <artifactId>palava-jpa-aspectj</artifactId>
+  <scm>
+    <developerConnection>scm:svn:https://palava.svn.cosmocode.de/palava-jpa-aspectj/trunk</developerConnection>
+  </scm>
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>aspectj-maven-plugin</artifactId>
+        <version>1.3</version>
+        <configuration>
+          <source>1.6</source>
+          <target>1.6</target>
+        </configuration>
+        <executions>
+          <execution>
+            <goals>
+              <goal>compile</goal>
+              <goal>test-compile</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>
+  <dependencies>
+      <dependency>
+        <groupId>org.aspectj</groupId>
+        <artifactId>aspectjrt</artifactId>
+      </dependency>
+      <dependency>
+        <groupId>de.cosmocode.palava</groupId>
+        <artifactId>palava-jpa</artifactId>
+        <version>2.0-SNAPSHOT</version>
+      </dependency>
+  </dependencies>
+</project>
