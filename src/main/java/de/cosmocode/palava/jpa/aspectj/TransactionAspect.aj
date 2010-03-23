@@ -17,7 +17,7 @@
  * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
  */
 
-package de.cosmocode.palava.jpa;
+package de.cosmocode.palava.jpa.aspectj;
 
 import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
@@ -32,6 +32,7 @@ import com.google.inject.Inject;
 import com.google.inject.Provider;
 
 import de.cosmocode.palava.core.aop.AbstractPalavaAspect;
+import de.cosmocode.palava.jpa.Transactional;
 
 public final aspect TransactionAspect extends AbstractPalavaAspect issingleton() {
 
