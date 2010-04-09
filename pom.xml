@@ -4,7 +4,7 @@
   <parent>
     <artifactId>palava-parent</artifactId>
     <groupId>de.cosmocode.palava</groupId>
-    <version>2.0.7</version>
+    <version>2.1.0</version>
   </parent>
   <modelVersion>4.0.0</modelVersion>
   <groupId>de.cosmocode.palava</groupId>
@@ -41,7 +41,7 @@
       <dependency>
         <groupId>de.cosmocode.palava</groupId>
         <artifactId>palava-jpa</artifactId>
-        <version>2.0-SNAPSHOT</version>
+        <version>[2.0-SNAPSHOT,3)</version>
       </dependency>
   </dependencies>
 </project>
