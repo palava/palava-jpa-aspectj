@@ -64,14 +64,14 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         try {
             returnValue = proceed();
         } catch (RuntimeException e) {
-            LOG.error("Exception inside automatic transaction context", e);
+            LOG.debug("Exception inside automatic transaction context; rolling back", e);
             tx.rollback();
             throw e;
         }
         
         if (localTx && tx.isActive()) {
             if (tx.getRollbackOnly()) {
-                LOG.trace("Transaction was marked as rollback only. Rolling back...");
+                LOG.debug("Transaction was marked as rollback only. Rolling back...");
                 tx.rollback();
             } else {
                 try {
@@ -80,10 +80,10 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
                 } catch (PersistenceException e) {
                     LOG.error("Commit in automatic transaction context failed", e);
                     if (tx.isActive()) {
-                        LOG.info("Rolling back {}", tx);
+                        LOG.debug("Rolling back {}", tx);
                         tx.rollback();
                     } else {
-                        LOG.info("Can't roll back inactive transaction {}", tx);
+                        LOG.debug("Can't roll back inactive transaction {}", tx);
                     }
                     throw e;
                 }
