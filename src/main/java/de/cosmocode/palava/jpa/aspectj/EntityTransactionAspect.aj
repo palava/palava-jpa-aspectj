@@ -88,6 +88,8 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
                     throw e;
                 }
             }
+        } else {
+            LOG.trace("Not committing non-local transaction {}", tx);
         }
         
         return returnValue;
