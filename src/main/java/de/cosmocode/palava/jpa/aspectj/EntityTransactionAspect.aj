@@ -53,10 +53,10 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         final boolean localTx = !tx.isActive();
         
         if (localTx) {
-            LOG.trace("Beginning automatic transaction");
+            LOG.trace("Beginning automatic transaction {}", tx);
             tx.begin();
         } else {
-            LOG.trace("Transaction already active");
+            LOG.trace("Transaction {} already active", tx);
         }
         
         final Object returnValue;
@@ -71,17 +71,22 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         
         if (localTx && tx.isActive()) {
             if (tx.getRollbackOnly()) {
-                LOG.debug("Transaction was marked as rollback only. Rolling back...");
+                LOG.debug("Transaction {} was marked as rollback only. Rolling back...", tx);
                 tx.rollback();
             } else {
                 try {
                     tx.commit();
-                    LOG.trace("Committed automatic transaction");
+                    LOG.trace("Committed automatic transaction {}", tx);
                 } catch (PersistenceException e) {
                     LOG.debug("Commit in automatic transaction context failed", e);
                     if (tx.isActive()) {
                         LOG.debug("Rolling back {}", tx);
-                        tx.rollback();
+                        try {
+                            tx.rollback();
+                        } catch (PersistenceException e2) {
+                            LOG.error("Commit in automatic transaction context failed", e);
+                            throw e2;
+                        }
                     } else {
                         LOG.debug("Can't roll back inactive transaction {}", tx);
                     }
