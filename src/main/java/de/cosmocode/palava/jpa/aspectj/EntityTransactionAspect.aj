@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.google.common.base.Preconditions;
+import com.google.gag.annotation.remark.Hack;
 import com.google.inject.Inject;
 import com.google.inject.Provider;
 
@@ -50,10 +51,11 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         LOG.trace("Retrieved entitymanager {}", manager);
         final EntityTransaction tx = manager.getTransaction();
         LOG.trace("Using transaction {}", tx);
-        final boolean localTx = !tx.isActive();
         
-        if (localTx) {
-            LOG.trace("Beginning automatic transaction {}", tx);
+        final boolean local = !tx.isActive();
+        
+        if (local) {
+            LOG.debug("Beginning automatic transaction {}", tx);
             tx.begin();
         } else {
             LOG.trace("Transaction {} already active", tx);
@@ -63,32 +65,37 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         
         try {
             returnValue = proceed();
-        } catch (RuntimeException e) {
-            LOG.debug("Exception inside automatic transaction context; rolling back", e);
-            tx.rollback();
-            throw e;
+        } catch (Exception e) {
+            try {
+                if (local && (tx.isActive() || tx.getRollbackOnly())) {
+                    LOG.info("Rolling back local/active transaction {}", tx);
+                    tx.rollback();
+                } else if (!tx.getRollbackOnly()) {
+                    LOG.debug("Setting transaction {} as rollback only", tx);
+                    tx.setRollbackOnly();
+                }
+            } catch (PersistenceException inner) {
+                LOG.error("Rollback failed", inner);
+            }
+            
+            // hack to support throwing checked exceptions
+            return sneakyThrow(e);
         }
         
-        if (localTx && tx.isActive()) {
+        if (local && tx.isActive()) {
             if (tx.getRollbackOnly()) {
-                LOG.debug("Transaction {} was marked as rollback only. Rolling back...", tx);
+                LOG.debug("Rolling back marked transaction {}", tx);
                 tx.rollback();
             } else {
                 try {
                     tx.commit();
                     LOG.trace("Committed automatic transaction {}", tx);
                 } catch (PersistenceException e) {
-                    LOG.debug("Commit in automatic transaction context failed", e);
-                    if (tx.isActive()) {
-                        LOG.debug("Rolling back {}", tx);
-                        try {
-                            tx.rollback();
-                        } catch (PersistenceException e2) {
-                            LOG.error("Commit in automatic transaction context failed", e);
-                            throw e2;
-                        }
-                    } else {
-                        LOG.debug("Can't roll back inactive transaction {}", tx);
+                    try {
+                        LOG.info("Rolling back transaction {}", tx);
+                        tx.rollback();
+                    } catch (PersistenceException inner) {
+                        LOG.error("Rollback failed", inner);
                     }
                     throw e;
                 }
@@ -98,6 +105,17 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         }
         
         return returnValue;
+    }
+    
+    @Hack("Why is this possible?")
+    private Object sneakyThrow(Throwable t) {
+        this.<RuntimeException>doSneakyThrow(t);
+        return null;
+    }
+
+    @SuppressWarnings("unchecked")
+    private <T extends Throwable> T doSneakyThrow(Throwable t) throws T {
+        throw (T) t;
     }
     
 }
