@@ -68,7 +68,7 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         } catch (Exception e) {
             try {
                 if (local && (tx.isActive() || tx.getRollbackOnly())) {
-                    LOG.info("Rolling back local/active transaction {}", tx);
+                    LOG.debug("Rolling back local/active transaction {}", tx);
                     tx.rollback();
                 } else if (!tx.getRollbackOnly()) {
                     LOG.debug("Setting transaction {} as rollback only", tx);
@@ -92,7 +92,7 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
                     LOG.trace("Committed automatic transaction {}", tx);
                 } catch (PersistenceException e) {
                     try {
-                        LOG.info("Rolling back transaction {}", tx);
+                        LOG.debug("Rolling back transaction {}", tx);
                         tx.rollback();
                     } catch (PersistenceException inner) {
                         LOG.error("Rollback failed", inner);
