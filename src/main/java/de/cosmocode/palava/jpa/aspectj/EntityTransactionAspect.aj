@@ -90,7 +90,7 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
             } else {
                 try {
                     tx.commit();
-                    LOG.trace("Committed automatic transaction {}", tx);
+                    LOG.debug("Committed automatic transaction {}", tx);
                 } catch (PersistenceException e) {
                     try {
                         LOG.debug("Rolling back transaction {}", tx);
