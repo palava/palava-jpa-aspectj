@@ -45,6 +45,7 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
     
     pointcut transactional(): execution(@Transactional * *.*(..));
 
+    @SuppressWarnings("finally")
     @SuppressAjWarnings("adviceDidNotMatch")
     Object around(): transactional() {
         final EntityManager manager = currentManager.get();
@@ -76,10 +77,10 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
                 }
             } catch (PersistenceException inner) {
                 LOG.error("Rollback failed", inner);
+            } finally {
+                // hack to support throwing checked exceptions
+                return sneakyThrow(e);
             }
-            
-            // hack to support throwing checked exceptions
-            return sneakyThrow(e);
         }
         
         if (local && tx.isActive()) {
