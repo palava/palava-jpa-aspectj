@@ -10,7 +10,7 @@
   <groupId>de.cosmocode.palava</groupId>
   <artifactId>palava-jpa-aspectj</artifactId>
   <scm>
-    <developerConnection>scm:svn:https://palava.svn.cosmocode.de/palava-jpa-aspectj/trunk</developerConnection>
+    <developerConnection>scm:git:git@github.com:palava/${project.artifactId}.git</developerConnection>
   </scm>
   <repositories>
     <repository>
