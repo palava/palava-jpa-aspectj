@@ -92,11 +92,13 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
                     tx.commit();
                     LOG.debug("Committed automatic transaction {}", tx);
                 } catch (PersistenceException e) {
-                    try {
-                        LOG.debug("Rolling back transaction {}", tx);
-                        tx.rollback();
-                    } catch (PersistenceException inner) {
-                        LOG.error("Rollback failed", inner);
+                    if (tx.isActive()) {
+                        try {
+                            LOG.debug("Rolling back transaction {}", tx);
+                            tx.rollback();
+                        } catch (PersistenceException inner) {
+                            LOG.error("Rollback failed", inner);
+                        }
                     }
                     throw e;
                 }
