@@ -16,23 +16,24 @@
 
 package de.cosmocode.palava.jpa.aspectj;
 
-import javax.persistence.EntityManager;
-import javax.persistence.EntityTransaction;
-import javax.persistence.PersistenceException;
-
+import com.google.common.base.Preconditions;
+import com.google.inject.Inject;
+import com.google.inject.Provider;
+import de.cosmocode.commons.Throwables;
+import de.cosmocode.palava.core.aop.PalavaAspect;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.SuppressAjWarnings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.google.common.base.Preconditions;
-import com.google.gag.annotation.remark.Hack;
-import com.google.inject.Inject;
-import com.google.inject.Provider;
+import javax.persistence.EntityManager;
+import javax.persistence.EntityTransaction;
+import javax.persistence.PersistenceException;
 
-import de.cosmocode.palava.core.aop.AbstractPalavaAspect;
-import de.cosmocode.palava.jpa.Transactional;
-
-public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingleton() {
+@Aspect
+public final class EntityTransactionAspect extends PalavaAspect {
 
     private static final Logger LOG = LoggerFactory.getLogger(EntityTransactionAspect.class);
 
@@ -42,12 +43,11 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
     public void setProvider(Provider<EntityManager> manager) {
         this.currentManager = Preconditions.checkNotNull(manager, "Manager");
     }
-    
-    pointcut transactional(): execution(@Transactional * *.*(..));
 
-    @SuppressWarnings("finally")
-    @SuppressAjWarnings("adviceDidNotMatch")
-    Object around(): transactional() {
+    @Around("execution(@de.cosmocode.palava.jpa.Transactional * *.*(..))")
+    private Object transactional(ProceedingJoinPoint point) {
+        checkInjected();
+
         final EntityManager manager = currentManager.get();
         LOG.trace("Retrieved entitymanager {}", manager);
         final EntityTransaction tx = manager.getTransaction();
@@ -65,8 +65,8 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         final Object returnValue;
         
         try {
-            returnValue = proceed();
-        } catch (Exception e) {
+            returnValue = point.proceed();
+        } catch (Throwable e) {
             try {
                 if (local && (tx.isActive() || tx.getRollbackOnly())) {
                     LOG.debug("Rolling back local/active transaction {}", tx);
@@ -78,11 +78,10 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
             } catch (PersistenceException inner) {
                 LOG.error("Rollback failed", inner);
             } finally {
-                // hack to support throwing checked exceptions
-                return sneakyThrow(e);
+                throw Throwables.sneakyThrow(e);
             }
         }
-        
+
         if (local && tx.isActive()) {
             if (tx.getRollbackOnly()) {
                 LOG.debug("Rolling back marked transaction {}", tx);
@@ -109,16 +108,5 @@ public final aspect EntityTransactionAspect extends AbstractPalavaAspect issingl
         
         return returnValue;
     }
-    
-    @Hack("Why is this possible?")
-    private Object sneakyThrow(Throwable t) {
-        this.<RuntimeException>doSneakyThrow(t);
-        return null;
-    }
 
-    @SuppressWarnings("unchecked")
-    private <T extends Throwable> T doSneakyThrow(Throwable t) throws T {
-        throw (T) t;
-    }
-    
 }
