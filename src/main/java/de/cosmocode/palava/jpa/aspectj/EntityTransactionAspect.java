@@ -32,6 +32,9 @@ import javax.persistence.EntityManager;
 import javax.persistence.EntityTransaction;
 import javax.persistence.PersistenceException;
 
+/**
+ * Aspect for methods annotated with {@link de.cosmocode.palava.jpa.Transactional}.
+ */
 @Aspect
 public final class EntityTransactionAspect extends PalavaAspect {
 
@@ -44,8 +47,9 @@ public final class EntityTransactionAspect extends PalavaAspect {
         this.currentManager = Preconditions.checkNotNull(manager, "Manager");
     }
 
+    // CHECKSTYLE:OFF
     @Around("execution(@de.cosmocode.palava.jpa.Transactional * *.*(..))")
-    private Object transactional(ProceedingJoinPoint point) {
+    public Object transactional(ProceedingJoinPoint point) {
         checkInjected();
 
         final EntityManager manager = currentManager.get();
@@ -108,5 +112,6 @@ public final class EntityTransactionAspect extends PalavaAspect {
         
         return returnValue;
     }
+    // CHECKSTYLE:ON
 
 }
